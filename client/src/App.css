@@ -1,0 +1,30 @@
+body {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.App {
+  position: relative;
+  background-color: #f6f6f6;
+  padding: 30px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+input[type="file"] {
+  margin-bottom: 10px;
+}
+
+button {
+  margin-top: 20px;
+}
+
+.response-msg {
+  position: absolute;
+  top: 105%;
+}
