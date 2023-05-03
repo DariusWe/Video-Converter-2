@@ -4,16 +4,14 @@ import { useState } from 'react'
 function App() {
   const [videoFile, setVideoFile] = useState(null)
   const [outputContainer, setOutputContainer] = useState('')
-  // const [progress, setProgress] = useState('')
+  const [progress, setProgress] = useState('')
   const [convertedFilePath, setConvertedFilePath] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  // Listen to events from server (not working as SSE is only working for GET Methods)
-  // const eventSource = new EventSource('http://localhost:3001/convert-video')
-  // eventSource.onmessage = (event) => {
-  //   setProgress(event.data)
-  // }
-
+  // ToDo: close source when app is unmounting. Maybe useEffect here?
+  const eventSource = new EventSource('http://localhost:3001/stream')
+  eventSource.onmessage = (event) => setProgress(event.data)
+  
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -29,9 +27,11 @@ function App() {
         body: formData,
       })
       const data = await response.text()
+      setProgress(100)
       setConvertedFilePath(data)
       setIsLoading(false)
     } catch (err) {
+      // ToDo: Improve error handling (show meaningful errors to user)
       console.log(err)
     }
   }
@@ -41,6 +41,7 @@ function App() {
       <form onSubmit={handleSubmit}>
         <label htmlFor="file">Upload video file:</label>
         <input id="file" type="file" name="file" onChange={(e) => setVideoFile(e.target.files?.[0])}></input>
+        <span>Convert to:</span>
         <span>
           <input
             type="radio"
@@ -78,6 +79,7 @@ function App() {
           Convert
         </button>
       </form>
+      {progress && <span className="progress-msg">Progress: {progress} %</span>}
       {convertedFilePath && <span className="response-msg">Video successfully uploaded to {convertedFilePath}</span>}
     </div>
   )

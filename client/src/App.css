@@ -24,7 +24,12 @@ button {
   margin-top: 20px;
 }
 
+.progress-msg {
+  position: absolute;
+  top: 106%;
+}
+
 .response-msg {
   position: absolute;
-  top: 105%;
+  top: 115%;
 }
