@@ -29,9 +29,10 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage })
 
 // Routes
-/* 
-ToDo: Find a better way to handle Server Sent Events. The following way of implementing SSE is not best-practice. Error and client handling are not handled well by this approach.
-*/
+
+// The following Server Sent Events (SSE) implementation cannot handle mutliple clients. 
+// To handle multiple clients a unique id could be passed to the event emitter: 
+// req.app.locals.progressEmitter.on(`progress-${uploadId}`, sendProgress);
 app.get('/stream', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
