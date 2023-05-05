@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import multer from 'multer'
 import ffmpeg from 'fluent-ffmpeg'
+import events from 'events'
 import { promises as fs } from 'fs'
 
 // Express Setup
@@ -13,6 +14,7 @@ app.use(
 )
 app.use(express.json())
 const PORT = 3001
+app.locals.progressEmitter = new (events.EventEmitter)();
 
 // Multer setup
 const storage = multer.diskStorage({
@@ -31,16 +33,19 @@ const upload = multer({ storage: storage })
 ToDo: Find a better way to handle Server Sent Events. The following way of implementing SSE is not best-practice. Error and client handling are not handled well by this approach.
 */
 app.get('/stream', (req, res) => {
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
 
-  req.app.set('sseRes', res)
+  const sendProgress = (progress) => {
+    res.write(`data: ${progress}\n\n`);
+  };
+
+  req.app.locals.progressEmitter.on('progress', sendProgress);
 
   req.on('close', () => {
-    req.app.set('sseRes', null)
-  })
+    req.app.locals.progressEmitter.removeListener('progress', sendProgress);
+  });
 })
 
 app.post('/convert-video', upload.single('file'), (req, res) => {
@@ -56,10 +61,11 @@ app.post('/convert-video', upload.single('file'), (req, res) => {
       console.log('Started:', commandLine)
     })
     .on('progress', (progress) => {
-      sseRes.write(`data: ${Math.round(progress.percent)}\n\n`)
+      req.app.locals.progressEmitter.emit('progress', Math.round(progress.percent));
     })
     .on('error', (error, stdout, stderr) => {
       console.log('An error has occured:', error.message)
+      res.status(500).send(error.message)
     })
     .on('end', (stdout, stderr) => {
       console.log('\nTranscoding succeeded!')
