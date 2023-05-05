@@ -50,7 +50,6 @@ app.get('/stream', (req, res) => {
 })
 
 app.post('/convert-video', upload.single('file'), (req, res) => {
-  const sseRes = req.app.get('sseRes')
   const { outputContainer } = req.body
   const fileName = req.file.filename
   const inputFilePath = req.file.path.replaceAll('\\', '/')
@@ -69,7 +68,7 @@ app.post('/convert-video', upload.single('file'), (req, res) => {
       res.status(500).send(error.message)
     })
     .on('end', (stdout, stderr) => {
-      console.log('\nTranscoding succeeded!')
+      console.log('Transcoding succeeded!')
       res.send(outputFilePath)
       fs.unlink(inputFilePath).catch((error) => console.log(error))
     })
