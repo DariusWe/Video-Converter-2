@@ -6,6 +6,7 @@ function App() {
   const [outputContainer, setOutputContainer] = useState('')
   const [progress, setProgress] = useState('')
   const [convertedFilePath, setConvertedFilePath] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
@@ -30,12 +31,18 @@ function App() {
         method: 'POST',
         body: formData,
       })
+
       const data = await response.text()
-      setConvertedFilePath(data)
-      setProgress(100)
+
+      if (response.ok) {
+        setConvertedFilePath(data)
+        setProgress(100)
+      } else {
+        setErrorMsg(`An error has occured: ${data}`)
+      }
+
       setIsLoading(false)
     } catch (err) {
-      // ToDo: Improve error handling (show meaningful errors to user)
       console.log(err)
     }
   }
@@ -93,6 +100,7 @@ function App() {
       </form>
       {progress && <span className="progress-msg">Progress: {progress} %</span>}
       {convertedFilePath && <span className="response-msg">Video successfully uploaded to {convertedFilePath}</span>}
+      {errorMsg && <span className="response-msg">{errorMsg}</span>}
     </div>
   )
 }
