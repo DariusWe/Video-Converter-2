@@ -1,5 +1,5 @@
 import './App.css'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 function App() {
   const [videoFile, setVideoFile] = useState(null)
@@ -8,10 +8,14 @@ function App() {
   const [convertedFilePath, setConvertedFilePath] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  // ToDo: close source when app is unmounting. Maybe useEffect here?
-  const eventSource = new EventSource('http://localhost:3001/stream')
-  eventSource.onmessage = (event) => setProgress(event.data)
-  
+  useEffect(() => {
+    const eventSource = new EventSource('http://localhost:3001/stream')
+    eventSource.onmessage = (event) => setProgress(event.data)
+    return () => {
+      eventSource.close()
+    }
+  }, [])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -27,8 +31,8 @@ function App() {
         body: formData,
       })
       const data = await response.text()
-      setProgress(100)
       setConvertedFilePath(data)
+      setProgress(100)
       setIsLoading(false)
     } catch (err) {
       // ToDo: Improve error handling (show meaningful errors to user)
@@ -40,7 +44,14 @@ function App() {
     <div className="App">
       <form onSubmit={handleSubmit}>
         <label htmlFor="file">Upload video file:</label>
-        <input id="file" type="file" name="file" onChange={(e) => setVideoFile(e.target.files?.[0])}></input>
+        <input
+          id="file"
+          type="file"
+          name="file"
+          accept="video/mp4,video/x-m4v,video/*"
+          onChange={(e) => setVideoFile(e.target.files?.[0])}
+          required
+        ></input>
         <span>Convert to:</span>
         <span>
           <input
@@ -50,6 +61,7 @@ function App() {
             value="mp4"
             checked={outputContainer === 'mp4'}
             onChange={(e) => setOutputContainer(e.target.value)}
+            required
           />
           <label htmlFor="mp4">mp4</label>
         </span>
