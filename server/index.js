@@ -27,18 +27,17 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage })
 
 // Routes
+/* 
+ToDo: Find a better way to handle Server Sent Events. The following way of implementing SSE is not best-practice. Error and client handling are not handled well by this approach.
+*/
 app.get('/stream', (req, res) => {
-  // Set Headers necessary for SSE to work properly and flush these Headers to client immediatly
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
   res.setHeader('Connection', 'keep-alive')
   res.flushHeaders()
 
-  // store the current SSE response object in the app instance (Express app instance)
-  // This way SSE response object can be accessed in other routes using req.app.get()
   req.app.set('sseRes', res)
 
-  // Clean up when the connection is closed
   req.on('close', () => {
     req.app.set('sseRes', null)
   })
@@ -63,7 +62,7 @@ app.post('/convert-video', upload.single('file'), (req, res) => {
       console.log('An error has occured:', error.message)
     })
     .on('end', (stdout, stderr) => {
-      console.log('Transcoding succeeded!')
+      console.log('\nTranscoding succeeded!')
       res.send(outputFilePath)
       fs.unlink(inputFilePath).catch((error) => console.log(error))
     })
